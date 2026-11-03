@@ -65,4 +65,6 @@ HTML5, CSS3, JavaScript (vanilla), Leaflet (GIS map), Three.js (3D), Lucide icon
 This repository contains the working prototype. AI results in the demo come from a simulated pipeline with sample data; the full production design (mobile app, backend and trained models) is described in the documentation.
 
 ## Team
-Add your team name and members here.
+
+- Kishore Kumar B
+- Ashwin M
