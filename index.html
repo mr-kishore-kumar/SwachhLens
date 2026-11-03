@@ -1,0 +1,1550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SwachhLens | AI-Powered Waste Response Decision Support System</title>
+  <meta name="description" content="SwachhLens transforms citizen waste reports into explainable, prioritized, and actionable municipal cleanup decisions.">
+  
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Leaflet GIS Map CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <!-- Three.js 3D WebGL Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Leaflet GIS JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <!-- Application Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="theme-light">
+  <div id="app-root">
+
+    <!-- ========================================================================= -->
+    <!-- 3D PLANET EARTH MASS EFFECT ENTRY EXPERIENCE                              -->
+    <!-- ========================================================================= -->
+    <div id="intro-3d-overlay" class="intro-3d-overlay">
+      <canvas id="three-intro-canvas" class="three-intro-canvas"></canvas>
+
+      <!-- Mass Effect Sci-Fi HUD Overlay -->
+      <div class="intro-hud-content">
+        <div class="intro-brand-box mass-effect-hud">
+          <div class="intro-logo-row">
+            <div class="intro-logo-glow"><i data-lucide="scan-line"></i></div>
+            <h1 class="intro-title">Swachh<span class="text-emerald">Lens</span></h1>
+          </div>
+          <div class="intro-sub-emerald">AI-Powered Civic Intelligence</div>
+          <div class="intro-sub-muted">Turning Waste Reports into Immediate Action</div>
+        </div>
+
+        <!-- Launch Button -->
+        <div class="intro-actions-bar">
+          <button class="btn-launch-glow" id="btn-enter-platform" onclick="Intro3D.enterApp()">
+            <i data-lucide="zap"></i> <span>INITIALIZE SWACHHLENS SYSTEM</span> <i data-lucide="arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Universal Navigation Header -->
+    <header class="top-nav">
+      <div class="nav-brand">
+        <div class="brand-logo-icon">
+          <i data-lucide="scan-line"></i>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">Swachh<span class="text-emerald">Lens</span></span>
+          <span class="brand-tagline">AI Waste Decision Support System</span>
+        </div>
+      </div>
+
+      <!-- View & Role Switcher Bar -->
+      <div class="nav-controls">
+        <div class="view-mode-tabs" id="view-mode-tabs">
+          <button class="view-tab-btn" data-view="login" id="tab-login-btn">
+            <i data-lucide="log-in"></i>
+            <span>Login Page</span>
+          </button>
+          <button class="view-tab-btn active" data-view="portal" id="tab-portal-btn">
+            <i data-lucide="layout-dashboard"></i>
+            <span>Command Portal</span>
+          </button>
+          <button class="view-tab-btn" data-view="citizen" id="tab-citizen-btn">
+            <i data-lucide="smartphone"></i>
+            <span>Citizen Mobile</span>
+          </button>
+          <button class="view-tab-btn" data-view="crew" id="tab-crew-btn">
+            <i data-lucide="truck"></i>
+            <span>Field Crew App</span>
+          </button>
+        </div>
+
+        <!-- Dark / Light Theme Mode Toggle Button -->
+        <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="App.toggleTheme()" title="Toggle Dark / Light Mode">
+          <i data-lucide="moon" id="theme-icon-moon"></i>
+          <i data-lucide="sun" id="theme-icon-sun" class="hidden"></i>
+          <span class="theme-mode-text" id="theme-mode-text">Dark</span>
+        </button>
+
+        <button class="btn btn-outline btn-xs" id="btn-replay-3d" onclick="Intro3D.replay()" title="Replay 3D Cinematic Opening Experience">
+          <i data-lucide="orbit"></i> <span>3D Intro</span>
+        </button>
+
+        <div class="walkthrough-btn-wrapper">
+          <button class="btn btn-gradient-primary pulse-btn" id="start-walkthrough-btn">
+            <i data-lucide="play-circle"></i>
+            <span>10-Step Interactive Tour</span>
+          </button>
+        </div>
+
+        <!-- User Authentication & Profile Pill -->
+        <div class="auth-profile-pill" id="auth-profile-pill">
+          <div class="user-avatar" id="nav-user-avatar">PS</div>
+          <div class="user-meta">
+            <span class="user-name" id="nav-user-name">Priya Sharma</span>
+            <span class="user-role-badge badge-officer" id="nav-user-role">Municipal Officer</span>
+          </div>
+          <button class="btn-icon" id="auth-menu-btn" title="Account & Roles">
+            <i data-lucide="chevron-down"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Global Toast & Notification System -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Quick Role Switch Dropdown Menu (Hidden by default) -->
+    <div id="role-menu-dropdown" class="dropdown-card hidden">
+      <div class="dropdown-header">
+        <strong>Switch Demo Persona</strong>
+        <span class="text-xs text-muted">Role-Based Access Control</span>
+      </div>
+      <div class="dropdown-items">
+        <button class="dropdown-item" onclick="Auth.switchUser('officer')">
+          <div class="avatar-sm officer-bg"><i data-lucide="shield-check"></i></div>
+          <div class="item-info">
+            <span class="item-title">Priya Sharma (Officer)</span>
+            <span class="item-sub">Sector-5 Municipal Officer (Full Control)</span>
+          </div>
+        </button>
+        <button class="dropdown-item" onclick="Auth.switchUser('citizen')">
+          <div class="avatar-sm citizen-bg"><i data-lucide="user"></i></div>
+          <div class="item-info">
+            <span class="item-title">Rajesh Kumar (Citizen)</span>
+            <span class="item-sub">Registered Civic User CIT-4521</span>
+          </div>
+        </button>
+        <button class="dropdown-item" onclick="Auth.switchUser('crew')">
+          <div class="avatar-sm crew-bg"><i data-lucide="hard-hat"></i></div>
+          <div class="item-info">
+            <span class="item-title">Ramesh Singh (Crew Lead)</span>
+            <span class="item-sub">Team-Sector5-A Jetting & Compactor</span>
+          </div>
+        </button>
+      </div>
+      <div class="dropdown-footer">
+        <button class="btn-link text-danger" onclick="Auth.logout()">
+          <i data-lucide="log-out"></i> Log Out to Login Screen
+        </button>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- VIEW 0: DEDICATED FULL-PAGE LOGIN SCREEN (Matching Screenshot 3)          -->
+    <!-- ========================================================================= -->
+    <main id="login-view" class="app-view">
+      <div class="login-dark-page">
+        <div class="login-dark-card">
+          <!-- Top Center Logo & Title with Theme Switcher -->
+          <div class="login-dark-header">
+            <div class="login-top-actions">
+              <button class="theme-toggle-btn login-theme-toggle" id="login-theme-toggle-btn" onclick="App.toggleTheme()" title="Toggle Dark / Light Mode">
+                <i data-lucide="moon" id="login-theme-moon"></i>
+                <i data-lucide="sun" id="login-theme-sun" class="hidden"></i>
+                <span id="login-theme-text">Dark Mode</span>
+              </button>
+            </div>
+            <div class="login-dark-logo"><i data-lucide="scan-line"></i></div>
+            <h1 class="login-dark-title">Swachh<span class="text-emerald">Lens</span></h1>
+            <p class="login-dark-subtitle">AI-Powered Waste Response Decision Support System</p>
+          </div>
+
+          <!-- Section Label -->
+          <div class="login-dark-section-lbl">SELECT DEMO PERSONA:</div>
+
+          <!-- 3-Role Persona Selector Cards (Matching Screenshot 3) -->
+          <div class="login-dark-personas">
+            <div class="login-persona-row selected" id="persona-card-officer" onclick="Auth.selectLoginPersona('officer')">
+              <div class="persona-circle-icon officer-bg"><i data-lucide="shield-check"></i></div>
+              <div class="persona-meta">
+                <span class="persona-name">Priya Sharma</span>
+                <span class="persona-role">Municipal Officer</span>
+              </div>
+              <div class="persona-check-icon"><i data-lucide="check"></i></div>
+            </div>
+
+            <div class="login-persona-row" id="persona-card-citizen" onclick="Auth.selectLoginPersona('citizen')">
+              <div class="persona-circle-icon citizen-bg"><i data-lucide="user"></i></div>
+              <div class="persona-meta">
+                <span class="persona-name">Rajesh Kumar</span>
+                <span class="persona-role">Citizen Reporter</span>
+              </div>
+              <div class="persona-check-icon hidden"><i data-lucide="check"></i></div>
+            </div>
+
+            <div class="login-persona-row" id="persona-card-crew" onclick="Auth.selectLoginPersona('crew')">
+              <div class="persona-circle-icon crew-bg"><i data-lucide="truck"></i></div>
+              <div class="persona-meta">
+                <span class="persona-name">Ramesh Singh</span>
+                <span class="persona-role">Field Crew Lead</span>
+              </div>
+              <div class="persona-check-icon hidden"><i data-lucide="check"></i></div>
+            </div>
+          </div>
+
+          <!-- Dynamic Credentials Form (Matching Screenshot 3) -->
+          <form class="login-dark-form" onsubmit="event.preventDefault(); Auth.submitLogin();">
+            <div class="form-group mb-3">
+              <label class="login-dark-label" id="login-role-field-label">Municipal Officer Email / Government ID</label>
+              <input type="text" id="login-username-input" class="login-dark-input" value="priya.sharma@mcd.gov.in" required>
+            </div>
+
+            <div class="form-group mb-3">
+              <label class="login-dark-label">Password / Secure Token</label>
+              <input type="password" id="login-password-input" class="login-dark-input" value="••••••••••••" required>
+            </div>
+
+            <div class="login-dark-options">
+              <label class="login-chk-label">
+                <input type="checkbox" checked> <span>Remember Session</span>
+              </label>
+              <span class="login-sso-badge">Demo SSO Active</span>
+            </div>
+
+            <button type="submit" class="btn-login-dark-submit" id="btn-login-submit">
+              <i data-lucide="log-in"></i> <span id="login-btn-text">Sign In to SwachhLens</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </main>
+
+    <!-- ========================================================================= -->
+    <!-- VIEW 1: MUNICIPAL COMMAND CENTER (DESKTOP WEB PORTAL)                     -->
+    <!-- ========================================================================= -->
+    <main id="portal-view" class="app-view active-view">
+      <!-- Portal Sub-Header Navigation -->
+      <div class="portal-subnav">
+        <div class="portal-tabs">
+          <button class="portal-tab active" data-portal-tab="dashboard">
+            <i data-lucide="bar-chart-3"></i> Unified Command & GIS Map
+          </button>
+          <button class="portal-tab" data-portal-tab="queue">
+            <i data-lucide="list-ordered"></i> Priority Queue & Triage
+            <span class="badge badge-critical" id="queue-badge-count">3</span>
+          </button>
+          <button class="portal-tab" data-portal-tab="verification">
+            <i data-lucide="check-circle-2"></i> Closed-Loop Verification
+            <span class="badge badge-warning" id="verification-badge-count">1</span>
+          </button>
+          <button class="portal-tab" data-portal-tab="engine-rules">
+            <i data-lucide="sliders"></i> Decision Engine Studio
+          </button>
+          <button class="portal-tab" data-portal-tab="predictive">
+            <i data-lucide="sparkles"></i> Predictive Hotspots
+          </button>
+          <button class="portal-tab" data-portal-tab="ethics-audit">
+            <i data-lucide="lock"></i> Data Ethics & Audit Trail
+          </button>
+        </div>
+
+        <div class="portal-actions">
+          <button class="btn btn-outline btn-sm" id="btn-ask-ai" onclick="AIAssistant.toggle()">
+            <i data-lucide="bot"></i>
+            <span>Ask SwachhLens AI</span>
+          </button>
+          <button class="btn btn-outline btn-sm" id="btn-reset-demo-data" onclick="DataStore.resetToDefault()">
+            <i data-lucide="refresh-cw"></i>
+            <span>Reset Demo Data</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- PORTAL TAB 1: DASHBOARD & GIS MAP -->
+      <section id="tab-dashboard" class="portal-tab-content active-content">
+        <!-- Top Operational KPI Metric Cards -->
+        <div class="kpi-grid">
+          <div class="kpi-card card-critical">
+            <div class="kpi-icon"><i data-lucide="alert-triangle"></i></div>
+            <div class="kpi-content">
+              <span class="kpi-label">CRITICAL Priority</span>
+              <span class="kpi-val" id="kpi-critical-val">2</span>
+              <span class="kpi-sub"><span class="text-danger">● Drain & Hospital risks</span></span>
+            </div>
+          </div>
+          <div class="kpi-card card-high">
+            <div class="kpi-icon"><i data-lucide="alert-circle"></i></div>
+            <div class="kpi-content">
+              <span class="kpi-label">HIGH Priority</span>
+              <span class="kpi-val" id="kpi-high-val">4</span>
+              <span class="kpi-sub"><span class="text-warning">● Multi-report clusters</span></span>
+            </div>
+          </div>
+          <div class="kpi-card card-medium">
+            <div class="kpi-icon"><i data-lucide="clock"></i></div>
+            <div class="kpi-content">
+              <span class="kpi-label">MEDIUM & LOW</span>
+              <span class="kpi-val" id="kpi-med-val">6</span>
+              <span class="kpi-sub">Standard collection route</span>
+            </div>
+          </div>
+          <div class="kpi-card card-success">
+            <div class="kpi-icon"><i data-lucide="git-merge"></i></div>
+            <div class="kpi-content">
+              <span class="kpi-label">Duplicate Clustering</span>
+              <span class="kpi-val" id="kpi-cluster-val">74%</span>
+              <span class="kpi-sub text-emerald">23 citizen reports → 6 incidents</span>
+            </div>
+          </div>
+          <div class="kpi-card card-neutral">
+            <div class="kpi-icon"><i data-lucide="timer"></i></div>
+            <div class="kpi-content">
+              <span class="kpi-label">Avg Resolution Time</span>
+              <span class="kpi-val" id="kpi-res-time">62 min</span>
+              <span class="kpi-sub text-emerald">↓ 68% faster than manual</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main GIS Map & Live Stream Layout -->
+        <div class="dashboard-gis-grid">
+          <!-- GIS Map Panel -->
+          <div class="gis-map-container card">
+            <div class="map-toolbar">
+              <div class="map-title-group">
+                <h3><i data-lucide="map-pin"></i> Ward 14 - Intelligent Waste GIS Hotspot Map</h3>
+                <span class="badge badge-neutral">Live Geo-Fenced PostGIS Index</span>
+              </div>
+              <div class="map-layers-toggle">
+                <label class="layer-chk">
+                  <input type="checkbox" id="layer-clusters-chk" checked>
+                  <span>Incident Clusters</span>
+                </label>
+                <label class="layer-chk">
+                  <input type="checkbox" id="layer-sensitive-chk" checked>
+                  <span>Sensitive Zones (Schools/Hospitals)</span>
+                </label>
+                <label class="layer-chk">
+                  <input type="checkbox" id="layer-drainage-chk" checked>
+                  <span>Drainage Network</span>
+                </label>
+                <label class="layer-chk">
+                  <input type="checkbox" id="layer-heatmap-chk">
+                  <span>Heatmap Density</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- True 3D Digital Twin City Controls Bar -->
+            <div class="map-3d-controls-bar">
+              <div class="map-view-switcher">
+                <button class="btn btn-xs btn-3d-switch active" id="btn-mode-3d" onclick="MunicipalPortal.toggle3DMode(true)">
+                  <i data-lucide="box"></i> <span>3D Digital Twin City</span>
+                </button>
+                <button class="btn btn-xs btn-3d-switch" id="btn-mode-2d" onclick="MunicipalPortal.toggle3DMode(false)">
+                  <i data-lucide="map"></i> <span>2D Carto Map</span>
+                </button>
+              </div>
+              <div class="map-tilt-controls" id="map-tilt-controls">
+                <span class="tilt-label"><i data-lucide="camera"></i> Camera Tilt:</span>
+                <button class="map-tilt-btn active" data-tilt="isometric" onclick="City3DMap.setCameraMode('isometric')" title="45° Tactical Isometric Perspective">
+                  <i data-lucide="building-2"></i> 45° Tactical
+                </button>
+                <button class="map-tilt-btn" data-tilt="topdown" onclick="City3DMap.setCameraMode('topdown')" title="Top-Down 90° Bird's-Eye View">
+                  <i data-lucide="satellite"></i> 90° Top-Down
+                </button>
+                <button class="map-tilt-btn" data-tilt="street" onclick="City3DMap.setCameraMode('street')" title="Cinematic Street-Level View">
+                  <i data-lucide="footprints"></i> Street Level
+                </button>
+                <button class="map-tilt-btn" id="btn-map-orbit" onclick="City3DMap.toggleOrbit()" title="Continuous 360° Tactical Orbit">
+                  <i data-lucide="refresh-cw"></i> 360° Orbit
+                </button>
+                <button class="map-tilt-btn" onclick="City3DMap.triggerRiseAnimation()" title="Re-animate Building Elevation Rise">
+                  <i data-lucide="arrow-up-circle"></i> Rise Buildings
+                </button>
+              </div>
+            </div>
+            
+            <!-- 3D Digital Twin City Canvas Wrapper -->
+            <div id="gis-3d-city-wrapper" class="gis-3d-city-wrapper">
+              <canvas id="gis-3d-city-canvas" class="gis-3d-city-canvas"></canvas>
+              <div id="city-3d-tooltip" class="city-3d-tooltip"></div>
+            </div>
+
+            <!-- Leaflet GIS Map Canvas (2D Fallback) -->
+            <div id="gis-map" class="gis-map-canvas hidden"></div>
+
+            <div class="map-legend">
+              <div class="legend-item"><span class="dot-critical"></span> Critical (Score 80-100)</div>
+              <div class="legend-item"><span class="dot-high"></span> High (Score 60-79)</div>
+              <div class="legend-item"><span class="dot-medium"></span> Medium (Score 40-59)</div>
+              <div class="legend-item"><span class="dot-low"></span> Low (Score 0-39)</div>
+              <div class="legend-item"><span class="dot-school"></span> Sensitive Landmark</div>
+              <div class="legend-item"><span class="dot-cluster-radius"></span> 100m Cluster Radius</div>
+            </div>
+          </div>
+
+          <!-- Live Incident Queue & Triage Side Panel -->
+          <div class="live-incidents-sidebar card">
+            <div class="sidebar-header">
+              <div class="sidebar-title">
+                <h4><i data-lucide="flame"></i> Active Priority Incidents</h4>
+                <span class="text-xs text-muted">Ranked by Explainable AI Score</span>
+              </div>
+              <div class="filter-mini">
+                <select id="sidebar-priority-filter" class="form-select-sm">
+                  <option value="ALL">All Priorities</option>
+                  <option value="CRITICAL">Critical Only</option>
+                  <option value="HIGH">High Only</option>
+                  <option value="UNASSIGNED">Unassigned</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="incident-list-scrollable" id="sidebar-incidents-list">
+              <!-- Dynamically rendered incident cards -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PORTAL TAB 2: PRIORITY QUEUE & TRIAGE TABLE -->
+      <section id="tab-queue" class="portal-tab-content">
+        <div class="card p-4">
+          <div class="table-header-controls">
+            <div>
+              <h3><i data-lucide="list-ordered"></i> Municipal Incident Decision Queue</h3>
+              <p class="text-sm text-muted">Review AI-clustered reports, verify confidence, and dispatch crews with 1-click.</p>
+            </div>
+            <div class="table-filter-bar">
+              <div class="search-input-wrapper">
+                <i data-lucide="search"></i>
+                <input type="text" id="queue-search-input" placeholder="Search by ID, location, or waste type..." class="form-input">
+              </div>
+              <select id="queue-category-filter" class="form-select">
+                <option value="ALL">All Categories</option>
+                <option value="Drain Blockage">Drain Blockage</option>
+                <option value="Organic Waste">Organic Waste</option>
+                <option value="Construction Debris">Construction Debris</option>
+                <option value="Biohazard">Biohazard / Medical</option>
+                <option value="Plastic Waste">Plastic Waste</option>
+                <option value="Overflowing Bin">Bin Overflow</option>
+              </select>
+              <select id="queue-status-filter" class="form-select">
+                <option value="ALL">All Statuses</option>
+                <option value="ANALYZED">Analyzed / Ready</option>
+                <option value="ASSIGNED">Assigned</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="AWAITING_VERIFICATION">Awaiting Verification</option>
+                <option value="CLOSED">Closed</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table" id="priority-queue-table">
+              <thead>
+                <tr>
+                  <th>Rank & ID</th>
+                  <th>Visual / Thumbnail</th>
+                  <th>Location & Landmark Context</th>
+                  <th>AI Waste Category & Volume</th>
+                  <th>Clustered Reports</th>
+                  <th>Priority Score & Breakdown</th>
+                  <th>AI Confidence</th>
+                  <th>Recommended Dispatch</th>
+                  <th>Current Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="priority-queue-tbody">
+                <!-- Dynamically injected rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- PORTAL TAB 3: CLOSED-LOOP VERIFICATION -->
+      <section id="tab-verification" class="portal-tab-content">
+        <div class="card p-4">
+          <div class="verification-dashboard-header">
+            <div>
+              <h3><i data-lucide="check-check"></i> AI Closed-Loop Verification Hub</h3>
+              <p class="text-sm text-muted">SwachhLens verifies waste clearance automatically using CV image comparison (>90% threshold) and drain patency detection.</p>
+            </div>
+            <div class="verification-kpis">
+              <div class="badge badge-success"><i data-lucide="shield-check"></i> 94.2% AI Accuracy</div>
+              <div class="badge badge-neutral"><i data-lucide="clock"></i> Avg 12s AI Verification Time</div>
+            </div>
+          </div>
+
+          <div class="verification-work-grid" id="verification-work-grid">
+            <!-- Dynamically populated verification tasks -->
+          </div>
+        </div>
+      </section>
+
+      <!-- PORTAL TAB 4: DECISION ENGINE STUDIO -->
+      <section id="tab-engine-rules" class="portal-tab-content">
+        <div class="card p-5">
+          <div class="decision-studio-header">
+            <div>
+              <h3><i data-lucide="sliders"></i> Waste Response Decision Engine Configuration</h3>
+              <p class="text-muted text-sm">Tune multi-dimensional priority scoring weights, clustering parameters, and confidence policies according to municipal bylaws.</p>
+            </div>
+            <button class="btn btn-primary" onclick="DecisionEngine.saveWeights()">
+              <i data-lucide="save"></i> Save & Recalculate Queue
+            </button>
+          </div>
+
+          <div class="studio-grid">
+            <!-- Left: Weights Form -->
+            <div class="rules-box card">
+              <h4>1. Priority Scoring Multipliers (Must Sum to 100%)</h4>
+              <p class="text-xs text-muted mb-4">Formula: Priority = (w1 × Hazard) + (w2 × Volume) + (w3 × GeoRisk) + (w4 × Age) + (w5 × Frequency)</p>
+
+              <div class="weight-slider-group">
+                <div class="slider-header">
+                  <label><i data-lucide="biohazard"></i> w1: Hazard Severity Weight</label>
+                  <span class="weight-val" id="val-w1">35%</span>
+                </div>
+                <input type="range" id="slider-w1" min="10" max="60" value="35" class="range-slider" oninput="DecisionEngine.updateWeightPreview()">
+                <span class="text-xs text-muted">Hazardous (100), Drain Blockage (90), E-waste (75), Organic (70), Construction (60)</span>
+              </div>
+
+              <div class="weight-slider-group">
+                <div class="slider-header">
+                  <label><i data-lucide="box"></i> w2: Estimated Volume Weight</label>
+                  <span class="weight-val" id="val-w2">25%</span>
+                </div>
+                <input type="range" id="slider-w2" min="10" max="50" value="25" class="range-slider" oninput="DecisionEngine.updateWeightPreview()">
+                <span class="text-xs text-muted">Very Large (100), Large (70), Medium (40), Small (20)</span>
+              </div>
+
+              <div class="weight-slider-group">
+                <div class="slider-header">
+                  <label><i data-lucide="map-pin"></i> w3: Location Risk & Sensitivity Weight</label>
+                  <span class="weight-val" id="val-w3">20%</span>
+                </div>
+                <input type="range" id="slider-w3" min="5" max="40" value="20" class="range-slider" oninput="DecisionEngine.updateWeightPreview()">
+                <span class="text-xs text-muted">Drain (+25), School (+20), Hospital (+15), Water body (+15)</span>
+              </div>
+
+              <div class="weight-slider-group">
+                <div class="slider-header">
+                  <label><i data-lucide="clock"></i> w4: Complaint Age / Lingering Weight</label>
+                  <span class="weight-val" id="val-w4">15%</span>
+                </div>
+                <input type="range" id="slider-w4" min="5" max="30" value="15" class="range-slider" oninput="DecisionEngine.updateWeightPreview()">
+                <span class="text-xs text-muted">Escalates linearly up to 48 hours unresolved</span>
+              </div>
+
+              <div class="weight-slider-group">
+                <div class="slider-header">
+                  <label><i data-lucide="users"></i> w5: Citizen Frequency / Cluster Bonus</label>
+                  <span class="weight-val" id="val-w5">5%</span>
+                </div>
+                <input type="range" id="slider-w5" min="0" max="20" value="5" class="range-slider" oninput="DecisionEngine.updateWeightPreview()">
+                <span class="text-xs text-muted">Reflects public escalation magnitude (10 reports = 100 pts)</span>
+              </div>
+
+              <div class="weight-total-status" id="weight-total-status">
+                <span>Total Weight Sum: <strong id="total-weight-sum">100%</strong></span>
+                <span class="text-emerald font-semibold">✓ Balanced</span>
+              </div>
+            </div>
+
+            <!-- Right: 4-Signal Clustering & Confidence Policies -->
+            <div class="policies-box card">
+              <h4>2. 4-Signal Duplicate Clustering Engine</h4>
+              <div class="cluster-param-list">
+                <div class="cluster-param-item">
+                  <div class="param-title">
+                    <span>GPS Proximity Radius</span>
+                    <span class="badge badge-neutral">100 meters</span>
+                  </div>
+                  <p class="text-xs text-muted">Reports within 100m receive +25 points</p>
+                </div>
+                <div class="cluster-param-item">
+                  <div class="param-title">
+                    <span>Temporal Time Window</span>
+                    <span class="badge badge-neutral">4 hours</span>
+                  </div>
+                  <p class="text-xs text-muted">Reports within 4h receive +25 points</p>
+                </div>
+                <div class="cluster-param-item">
+                  <div class="param-title">
+                    <span>Waste Category Matching</span>
+                    <span class="badge badge-neutral">Exact/Semantic Match</span>
+                  </div>
+                  <p class="text-xs text-muted">Category compatibility check gives +25 points</p>
+                </div>
+                <div class="cluster-param-item">
+                  <div class="param-title">
+                    <span>Visual Image Similarity (pHash)</span>
+                    <span class="badge badge-neutral">≥ 0.75 score</span>
+                  </div>
+                  <p class="text-xs text-muted">Perceptual hash match gives +25 points</p>
+                </div>
+              </div>
+
+              <h4 class="mt-6">3. 3-Tier AI Confidence Policy</h4>
+              <div class="confidence-policy-preview">
+                <div class="policy-card tier-high">
+                  <div class="tier-badge">HIGH (≥ 85%)</div>
+                  <p class="text-xs">Instant auto-recommendation generated for municipal officer 1-click dispatch.</p>
+                </div>
+                <div class="policy-card tier-med">
+                  <div class="tier-badge">MEDIUM (70-84%)</div>
+                  <p class="text-xs">Flagged with [Review Required] tag in officer triage queue.</p>
+                </div>
+                <div class="policy-card tier-low">
+                  <div class="tier-badge">LOW (&lt; 70%)</div>
+                  <p class="text-xs">Withheld from field dispatch until human supervisor categorizes visually.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PORTAL TAB 5: PREDICTIVE HOTSPOTS -->
+      <section id="tab-predictive" class="portal-tab-content">
+        <div class="card p-5">
+          <div class="predictive-header">
+            <div>
+              <h3><i data-lucide="sparkles"></i> Predictive Hotspot & Preventive Scheduling</h3>
+              <p class="text-muted text-sm">AI analysis of historical complaints, time-of-day dumping patterns, and seasonal weather to prevent illegal dump sites before citizen complaints occur.</p>
+            </div>
+            <span class="badge badge-primary"><i data-lucide="cpu"></i> Machine Learning Forecast Engine</span>
+          </div>
+
+          <div class="predictive-grid">
+            <div class="predictive-card card">
+              <div class="pred-title">
+                <span class="hotspot-badge hot-high">High Risk Hotspot</span>
+                <h4>Gupta Market Commercial Alley</h4>
+              </div>
+              <p class="text-sm text-muted">Historical peak: 19:00 - 22:00 Daily. High risk of vegetable market overflow blocking arterial storm drain.</p>
+              <div class="pred-metrics">
+                <div class="metric"><span class="m-val">87%</span><span class="m-lbl">Probability Today</span></div>
+                <div class="metric"><span class="m-val">~1.5 m³</span><span class="m-lbl">Expected Volume</span></div>
+              </div>
+              <div class="pred-action">
+                <strong>Preventive Recommendation:</strong>
+                <p class="text-xs text-muted">Schedule 1 Compact Tipper sweep at 18:30 before peak accumulation.</p>
+                <button class="btn btn-outline btn-sm mt-2" onclick="showToast('Preventive Route Added to Team-Sector5-A Schedule!', 'success')">
+                  <i data-lucide="plus"></i> Add Preventive Schedule
+                </button>
+              </div>
+            </div>
+
+            <div class="predictive-card card">
+              <div class="pred-title">
+                <span class="hotspot-badge hot-med">Medium Risk Hotspot</span>
+                <h4>Yamuna Ghat Ghat-3 Picnic Area</h4>
+              </div>
+              <p class="text-sm text-muted">Weekend tourist plastic accumulation near riverbank water body.</p>
+              <div class="pred-metrics">
+                <div class="metric"><span class="m-val">68%</span><span class="m-lbl">Probability Today</span></div>
+                <div class="metric"><span class="m-val">~0.8 m³</span><span class="m-lbl">Expected Volume</span></div>
+              </div>
+              <div class="pred-action">
+                <strong>Preventive Recommendation:</strong>
+                <p class="text-xs text-muted">Alert GreenRecycle Partner to place temporary high-capacity bins.</p>
+                <button class="btn btn-outline btn-sm mt-2" onclick="showToast('Partner Alert Dispatched!', 'success')">
+                  <i data-lucide="send"></i> Alert Recycler
+                </button>
+              </div>
+            </div>
+
+            <div class="predictive-card card">
+              <div class="pred-title">
+                <span class="hotspot-badge hot-high">High Risk Hotspot</span>
+                <h4>Lajpat Metro Station Underpass</h4>
+              </div>
+              <p class="text-sm text-muted">Construction debris dumping during late night hours (02:00 - 05:00).</p>
+              <div class="pred-metrics">
+                <div class="metric"><span class="m-val">81%</span><span class="m-lbl">Probability</span></div>
+                <div class="metric"><span class="m-val">~2.2 m³</span><span class="m-lbl">Expected Volume</span></div>
+              </div>
+              <div class="pred-action">
+                <strong>Preventive Recommendation:</strong>
+                <p class="text-xs text-muted">Deploy Heavy Loader standby patrol on Ring Road.</p>
+                <button class="btn btn-outline btn-sm mt-2" onclick="showToast('Heavy Loader Standby Scheduled!', 'success')">
+                  <i data-lucide="check"></i> Schedule Standby
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PORTAL TAB 6: DATA ETHICS & AUDIT TRAIL -->
+      <section id="tab-ethics-audit" class="portal-tab-content">
+        <div class="card p-5">
+          <div class="ethics-header mb-4">
+            <div>
+              <h3><i data-lucide="shield"></i> Data Ethics, Privacy & System Audit Trail</h3>
+              <p class="text-muted text-sm">Adhering to strict Privacy-by-Design and 100% explainable AI governance principles.</p>
+            </div>
+            <div class="compliance-badges">
+              <span class="badge badge-success"><i data-lucide="eye-off"></i> Automatic Face & Plate Blurring</span>
+              <span class="badge badge-success"><i data-lucide="key"></i> RBAC Enforced</span>
+              <span class="badge badge-success"><i data-lucide="database"></i> Ephemeral EXIF Storage</span>
+            </div>
+          </div>
+
+          <div class="audit-grid">
+            <div class="audit-table-card card">
+              <h4>System Audit Log (Immutable Event Stream)</h4>
+              <div class="table-responsive mt-3">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Timestamp (UTC)</th>
+                      <th>Actor</th>
+                      <th>Incident ID</th>
+                      <th>Action Event</th>
+                      <th>AI Confidence / Override</th>
+                      <th>Audit Details</th>
+                    </tr>
+                  </thead>
+                  <tbody id="audit-log-tbody">
+                    <!-- Populated by DataStore -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="privacy-rules-card card">
+              <h4>Privacy & Governance Checklist</h4>
+              <ul class="privacy-list">
+                <li><i data-lucide="check-circle" class="text-emerald"></i> <strong>Minimal Data Collection:</strong> Only photo, GPS pin, and timestamp collected. No personal biometric data stored.</li>
+                <li><i data-lucide="check-circle" class="text-emerald"></i> <strong>Visual Anonymization:</strong> Real-time computer vision blur layer applied to pedestrians and vehicle license plates before database ingestion.</li>
+                <li><i data-lucide="check-circle" class="text-emerald"></i> <strong>Location Transparency:</strong> GPS coordinates explicitly confirmed by citizen with interactive pin drop prior to AI analysis.</li>
+                <li><i data-lucide="check-circle" class="text-emerald"></i> <strong>Explainable Governance:</strong> Zero opaque black-box decisions; every priority score contains the exact mathematical breakdown of factors.</li>
+                <li><i data-lucide="check-circle" class="text-emerald"></i> <strong>Human-in-the-Loop Override:</strong> Municipal officers retain full authority to modify vehicle or team dispatches.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ========================================================================= -->
+    <!-- VIEW 2: CITIZEN MOBILE APP INTERFACE                                      -->
+    <!-- ========================================================================= -->
+    <main id="citizen-view" class="app-view">
+      <div class="mobile-frame-container">
+        <!-- Device Frame Mockup -->
+        <div class="smartphone-frame">
+          <div class="phone-notch">
+            <div class="speaker"></div>
+            <div class="camera-lens"></div>
+          </div>
+
+          <div class="phone-screen">
+            <!-- Citizen App Header -->
+            <div class="citizen-app-header">
+              <div class="citizen-brand">
+                <div class="citizen-logo"><i data-lucide="scan-line"></i></div>
+                <div>
+                  <h4>SwachhLens</h4>
+                  <span class="text-xs text-muted">Citizen Civic Portal</span>
+                </div>
+              </div>
+              <div class="citizen-user-pill" onclick="Auth.showLoginModal()" title="Click to switch persona">
+                <div class="avatar-xs citizen-bg">RK</div>
+                <span class="text-xs">Rajesh (CIT-4521)</span>
+              </div>
+            </div>
+
+            <!-- Citizen Sub-screens Container -->
+            <div class="citizen-screen-content">
+              
+              <!-- SCREEN 1: CITIZEN HOME -->
+              <div id="citizen-screen-home" class="citizen-subscreen active-screen">
+                <div class="citizen-hero-card">
+                  <div class="hero-badge">AI-Powered Waste Reporting</div>
+                  <h2>Spot waste? Take a photo. We decide the rest.</h2>
+                  <p class="text-xs">AI instantly analyzes volume, classifies waste, checks duplicates, and alerts municipal cleanup teams.</p>
+                  
+                  <button class="btn btn-emerald btn-block mt-3" onclick="CitizenApp.goToScreen('capture')">
+                    <i data-lucide="camera"></i> Report Waste Issue Now
+                  </button>
+                </div>
+
+                <!-- Recent My Reports Status Card -->
+                <div class="citizen-section-title">
+                  <h5>My Active Reports</h5>
+                  <button class="btn-link text-xs" onclick="CitizenApp.goToScreen('my-reports')">View All</button>
+                </div>
+
+                <div class="citizen-reports-list" id="citizen-home-reports-list">
+                  <!-- Populated dynamically -->
+                </div>
+
+                <!-- Nearby Waste Map Snippet -->
+                <div class="citizen-section-title mt-4">
+                  <h5><i data-lucide="map-pin"></i> Nearby Issues in Ram Nagar</h5>
+                  <span class="badge badge-neutral text-xs">Radius: 500m</span>
+                </div>
+                <div class="nearby-mini-map card" id="citizen-nearby-map-preview">
+                  <div class="nearby-cluster-chip">
+                    <i data-lucide="layers"></i> 4 reports merged into 1 active cleanup at Gupta Market Road
+                  </div>
+                </div>
+              </div>
+
+              <!-- SCREEN 2: CAPTURE & UPLOAD SCREEN -->
+              <div id="citizen-screen-capture" class="citizen-subscreen">
+                <div class="screen-back-bar">
+                  <button class="btn-icon-sm" onclick="CitizenApp.goToScreen('home')">
+                    <i data-lucide="arrow-left"></i>
+                  </button>
+                  <h4>Capture Waste Evidence</h4>
+                </div>
+
+                <!-- Live Camera / File Picker Area -->
+                <div class="camera-viewport-card" id="camera-viewport">
+                  <div class="camera-placeholder" id="camera-placeholder">
+                    <i data-lucide="camera" class="camera-icon-large"></i>
+                    <p class="text-sm font-semibold">Take Photo or Select Evidence</p>
+                    <span class="text-xs text-muted">Automatic EXIF GPS & Timestamp Tagging</span>
+                    
+                    <div class="sample-images-grid mt-3">
+                      <div class="sample-picker-top">
+                        <span class="text-xs font-semibold text-muted block">Pick a demo scenario or upload real photo:</span>
+                        <label class="btn btn-outline btn-xs file-upload-btn">
+                          <i data-lucide="upload"></i> Upload Custom Image
+                          <input type="file" id="citizen-file-input" accept="image/*" class="hidden" onchange="CitizenApp.handleCustomFileUpload(event)">
+                        </label>
+                      </div>
+                      <div class="sample-chips">
+                        <button class="sample-chip active-chip" onclick="CitizenApp.selectSampleImage('drain_blockage')">
+                          <i data-lucide="droplets"></i> Drain Blockage (Demo Benchmark)
+                        </button>
+                        <button class="sample-chip" onclick="CitizenApp.selectSampleImage('construction_debris')">
+                          <i data-lucide="hard-hat"></i> Construction Debris
+                        </button>
+                        <button class="sample-chip" onclick="CitizenApp.selectSampleImage('medical_waste')">
+                          <i data-lucide="biohazard"></i> Hospital Medical Waste
+                        </button>
+                        <button class="sample-chip" onclick="CitizenApp.selectSampleImage('plastic_bottles')">
+                          <i data-lucide="recycle"></i> Plastic Accumulation
+                        </button>
+                        <button class="sample-chip chip-warning" onclick="CitizenApp.selectSampleImage('ambiguous_night')">
+                          <i data-lucide="alert-triangle"></i> Ambiguous / Low Confidence (56%)
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Image Preview with Real-Time CV Scan & Privacy Blur Canvas -->
+                  <div class="image-preview-wrapper hidden" id="image-preview-wrapper">
+                    <img id="capture-img-preview" src="" alt="Waste Preview">
+                    <canvas id="cv-scan-canvas" class="cv-scan-canvas"></canvas>
+                    <div class="scanning-laser hidden" id="scanning-laser"></div>
+                    
+                    <div class="privacy-blur-badge" id="privacy-blur-badge">
+                      <i data-lucide="shield-check"></i> Privacy Filter Active: Face & Plate Blurred
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Location & GPS Auto-Confirmation -->
+                <div class="gps-location-card card mt-3">
+                  <div class="gps-header">
+                    <div class="gps-icon-live"><i data-lucide="map-pin"></i></div>
+                    <div>
+                      <strong>GPS Location Tag</strong>
+                      <div class="text-xs text-muted" id="citizen-gps-text">28.5355° N, 77.2146° E (Gupta Market Rd)</div>
+                    </div>
+                    <button class="btn-link text-xs" onclick="CitizenApp.recenterGPS()">Recenter</button>
+                  </div>
+                  <div class="landmark-proximity-alert" id="landmark-proximity-alert">
+                    <i data-lucide="school"></i> Sensitive Landmark detected: <strong>Ram Nagar Municipal School (85m)</strong>
+                  </div>
+                </div>
+
+                <!-- Optional Citizen Comment -->
+                <div class="form-group mt-3">
+                  <label class="text-xs font-semibold">Optional Note / Hazard Observation:</label>
+                  <textarea id="citizen-report-comment" class="form-input text-sm" rows="2" placeholder="e.g. Water backing up into nearby shops. Very urgent!"></textarea>
+                </div>
+
+                <!-- Privacy & Data Collection Consent Check -->
+                <div class="privacy-toggle-row">
+                  <label class="switch-control">
+                    <input type="checkbox" id="citizen-privacy-blur-toggle" checked onchange="CitizenApp.togglePrivacyBlur()">
+                    <span class="slider round"></span>
+                  </label>
+                  <span class="text-xs text-muted">Auto-blur pedestrian faces & vehicle plates (Section 17 Compliance)</span>
+                </div>
+
+                <!-- Submit Button -->
+                <button class="btn btn-emerald btn-block mt-3" id="btn-submit-report" onclick="CitizenApp.processAndSubmitReport()">
+                  <i data-lucide="sparkles"></i> Analyze & Submit Report
+                </button>
+              </div>
+
+              <!-- SCREEN 3: REAL-TIME AI ANALYSIS IN PROGRESS -->
+              <div id="citizen-screen-analyzing" class="citizen-subscreen">
+                <div class="analyzing-container">
+                  <div class="radar-scan-anim">
+                    <div class="radar-ring ring-1"></div>
+                    <div class="radar-ring ring-2"></div>
+                    <div class="radar-ring ring-3"></div>
+                    <i data-lucide="scan-line" class="radar-center-icon"></i>
+                  </div>
+                  
+                  <h3>AI Pipeline Executing</h3>
+                  <p class="text-xs text-muted">SwachhLens 5-Module Waste Intelligence Engine</p>
+
+                  <div class="ai-steps-checklist">
+                    <div class="ai-step-item active" id="aistep-1">
+                      <i data-lucide="check" class="step-check"></i>
+                      <span>1. Computer Vision Multi-Class Classification</span>
+                    </div>
+                    <div class="ai-step-item" id="aistep-2">
+                      <i data-lucide="check" class="step-check"></i>
+                      <span>2. Scale Anchoring & Volumetric Estimation</span>
+                    </div>
+                    <div class="ai-step-item" id="aistep-3">
+                      <i data-lucide="check" class="step-check"></i>
+                      <span>3. 4-Signal Geo-Spatial Duplicate Clustering</span>
+                    </div>
+                    <div class="ai-step-item" id="aistep-4">
+                      <i data-lucide="check" class="step-check"></i>
+                      <span>4. Multi-Factor Explainable Priority Scoring</span>
+                    </div>
+                    <div class="ai-step-item" id="aistep-5">
+                      <i data-lucide="check" class="step-check"></i>
+                      <span>5. Action & Resource Matching Recommendation</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- SCREEN 4: INSTANT AI REPORT RESULT & EXPLAINABILITY -->
+              <div id="citizen-screen-result" class="citizen-subscreen">
+                <div class="screen-back-bar">
+                  <button class="btn-icon-sm" onclick="CitizenApp.goToScreen('home')">
+                    <i data-lucide="x"></i>
+                  </button>
+                  <h4>AI Analysis Result</h4>
+                </div>
+
+                <div class="result-success-badge">
+                  <i data-lucide="check-circle-2"></i> Report Successfully Ingested & Clustered!
+                </div>
+
+                <!-- AI Assessment Card -->
+                <div class="ai-result-card card mt-3">
+                  <div class="result-header">
+                    <div>
+                      <span class="text-xs text-muted">Incident Cluster ID</span>
+                      <h4 id="res-incident-id">INCIDENT-0847</h4>
+                    </div>
+                    <div class="priority-pill pill-high" id="res-priority-pill">
+                      HIGH (Score 58/100)
+                    </div>
+                  </div>
+
+                  <div class="ai-detection-grid mt-3">
+                    <div class="detect-item">
+                      <span class="lbl">Waste Type</span>
+                      <strong id="res-category">Organic + Mixed Garbage</strong>
+                      <span class="conf text-emerald" id="res-category-conf">87% Confidence</span>
+                    </div>
+                    <div class="detect-item">
+                      <span class="lbl">Volume Tier</span>
+                      <strong id="res-volume">Large (~1.2-1.5 m³)</strong>
+                      <span class="conf text-emerald" id="res-volume-conf">78% Confidence</span>
+                    </div>
+                  </div>
+
+                  <!-- 4-Signal Cluster Summary -->
+                  <div class="cluster-summary-box mt-3">
+                    <div class="cluster-title">
+                      <i data-lucide="git-merge"></i> Duplicate Intelligence: <strong>4 Citizen Reports Clustered</strong>
+                    </div>
+                    <p class="text-xs text-muted">3 neighbors also reported this site within 50m and 35 mins. Your report boosted urgency without creating duplicate municipal work orders.</p>
+                  </div>
+
+                  <!-- Explainable Reason List -->
+                  <div class="explainability-box mt-3">
+                    <span class="explain-title">Why Priority is HIGH:</span>
+                    <ul class="reasons-list" id="res-reasons-list">
+                      <li><i data-lucide="check" class="text-emerald"></i> Large waste volume accumulation (~1.4 m³)</li>
+                      <li><i data-lucide="check" class="text-emerald"></i> 4 citizen complaints in active cluster</li>
+                      <li><i data-lucide="alert-triangle" class="text-danger"></i> Drain blockage detected (Public health escalation)</li>
+                      <li><i data-lucide="check" class="text-emerald"></i> Within 85m of Ram Nagar Municipal School</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <!-- Feedback & Experience Rating Card (Section 20 Stage 10) -->
+                <div class="citizen-feedback-card card mt-3" id="citizen-feedback-card">
+                  <div class="feedback-head">
+                    <strong><i data-lucide="star"></i> Rate Civic Resolution Experience:</strong>
+                    <span class="text-xs text-muted">Direct citizen feedback loop</span>
+                  </div>
+                  <div class="feedback-buttons-row mt-2">
+                    <button class="btn btn-outline btn-xs fb-btn" onclick="CitizenApp.submitFeedback('Satisfied')">
+                      😊 Satisfied
+                    </button>
+                    <button class="btn btn-outline btn-xs fb-btn" onclick="CitizenApp.submitFeedback('Neutral')">
+                      😐 Neutral
+                    </button>
+                    <button class="btn btn-outline btn-xs fb-btn" onclick="CitizenApp.submitFeedback('Unsatisfied')">
+                      🙁 Unsatisfied
+                    </button>
+                  </div>
+                  <div id="feedback-submitted-alert" class="text-xs text-emerald font-semibold mt-2 hidden">
+                    ✓ Thank you! Your feedback has been recorded in municipal audit logs.
+                  </div>
+                </div>
+
+                <!-- Downloadable Civic Resolution Summary Button -->
+                <button class="btn btn-outline btn-block mt-3" onclick="CitizenApp.openCivicReportModal()">
+                  <i data-lucide="file-text"></i> View Civic Incident Summary & Resolution Certificate
+                </button>
+
+                <button class="btn btn-emerald btn-block mt-3 mb-4" onclick="CitizenApp.goToScreen('home')">
+                  <i data-lucide="home"></i> Back to Citizen Home
+                </button>
+              </div>
+
+              <!-- SCREEN 5: ALL MY REPORTS TRACKER -->
+              <div id="citizen-screen-my-reports" class="citizen-subscreen">
+                <div class="screen-back-bar">
+                  <button class="btn-icon-sm" onclick="CitizenApp.goToScreen('home')">
+                    <i data-lucide="arrow-left"></i>
+                  </button>
+                  <h4>My Submitted Reports</h4>
+                </div>
+
+                <div class="my-reports-list-full" id="citizen-full-reports-list">
+                  <!-- Populated dynamically -->
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Citizen Bottom Navigation Bar -->
+            <div class="citizen-bottom-nav">
+              <button class="c-nav-item active" onclick="CitizenApp.goToScreen('home')">
+                <i data-lucide="home"></i>
+                <span>Home</span>
+              </button>
+              <button class="c-nav-item" onclick="CitizenApp.goToScreen('capture')">
+                <i data-lucide="plus-circle" class="nav-icon-highlight"></i>
+                <span>Report</span>
+              </button>
+              <button class="c-nav-item" onclick="CitizenApp.goToScreen('my-reports')">
+                <i data-lucide="clock"></i>
+                <span>My Reports</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mobile View Guidance Helper Panel (on desktop) -->
+        <div class="mobile-side-helper card">
+          <div class="helper-badge"><i data-lucide="smartphone"></i> Citizen Mobile Experience</div>
+          <h3>Simulated Citizen Mobile App</h3>
+          <p class="text-sm text-muted">This viewport models how citizens interact with SwachhLens on Android & iOS devices built with Flutter / responsive web.</p>
+          
+          <div class="helper-steps-list">
+            <div class="h-step">
+              <div class="h-num">1</div>
+              <div class="h-desc">
+                <strong>Tap "Report Waste Issue Now"</strong>
+                <span>Open the capture screen with auto-GPS EXIF tagging</span>
+              </div>
+            </div>
+            <div class="h-step">
+              <div class="h-num">2</div>
+              <div class="h-desc">
+                <strong>Select Demo Image</strong>
+                <span>Pick "Drain Blockage" (Benchmark case INCIDENT-0847)</span>
+              </div>
+            </div>
+            <div class="h-step">
+              <div class="h-num">3</div>
+              <div class="h-desc">
+                <strong>Submit & View Instant Explainability</strong>
+                <span>Watch the 5-module AI engine classify and cluster</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="helper-footer">
+            <button class="btn btn-outline btn-sm btn-block" onclick="App.setViewMode('portal')">
+              <i data-lucide="layout-dashboard"></i> Switch to Municipal Command Portal
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- ========================================================================= -->
+    <!-- VIEW 3: FIELD CREW MOBILE APP INTERFACE                                   -->
+    <!-- ========================================================================= -->
+    <main id="crew-view" class="app-view">
+      <div class="mobile-frame-container">
+        <!-- Field Worker Device Frame Mockup -->
+        <div class="smartphone-frame crew-theme">
+          <div class="phone-notch">
+            <div class="speaker"></div>
+            <div class="camera-lens"></div>
+          </div>
+
+          <div class="phone-screen">
+            <!-- Field Crew App Header -->
+            <div class="crew-app-header">
+              <div class="crew-brand">
+                <div class="crew-logo"><i data-lucide="truck"></i></div>
+                <div>
+                  <h4>SwachhLens Crew</h4>
+                  <span class="text-xs">Team-Sector5-A (Jetting & Tipper)</span>
+                </div>
+              </div>
+              <div class="crew-user-pill" onclick="Auth.showLoginModal()">
+                <div class="avatar-xs crew-bg">RS</div>
+                <span class="text-xs">Ramesh S.</span>
+              </div>
+            </div>
+
+            <!-- Field Crew Jobs List & Detail Container -->
+            <div class="crew-screen-content" id="crew-screen-content">
+              <!-- Dynamically populated by FieldCrewApp -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Field Crew Guidance Helper Panel -->
+        <div class="mobile-side-helper card">
+          <div class="helper-badge"><i data-lucide="hard-hat"></i> Field Response & Verification</div>
+          <h3>Field Worker Mobile App</h3>
+          <p class="text-sm text-muted">Empowers municipal field teams with job routes, equipment requirements, before-after evidence capture, and instant AI verification.</p>
+          
+          <div class="crew-guidance-box">
+            <h4>Closed-Loop Cleanup Steps:</h4>
+            <ol class="text-sm text-muted">
+              <li>Review assigned high-priority work order (<code>INCIDENT-0847</code>).</li>
+              <li>Tap <strong>"Arrive & Start Work"</strong> (<code>IN_PROGRESS</code> status update).</li>
+              <li>Complete waste removal and drainage unblocking.</li>
+              <li>Tap <strong>"Upload After Photo & Verify"</strong> to trigger AI clearance comparison (>90% threshold).</li>
+            </ol>
+          </div>
+
+          <div class="helper-footer">
+            <button class="btn btn-outline btn-sm btn-block" onclick="App.setViewMode('portal')">
+              <i data-lucide="layout-dashboard"></i> View in Command Portal
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- ========================================================================= -->
+    <!-- INCIDENT DETAIL & DISPATCH MODAL / DRAWER                                 -->
+    <!-- ========================================================================= -->
+    <div id="incident-drawer-backdrop" class="modal-backdrop hidden" onclick="MunicipalPortal.closeDrawer(event)">
+      <div class="incident-drawer card" onclick="event.stopPropagation()">
+        <div class="drawer-header">
+          <div class="drawer-title-group">
+            <span class="badge badge-neutral" id="drawer-incident-badge-id">INCIDENT-0847</span>
+            <h3 id="drawer-incident-title">Gupta Market Approach Road</h3>
+            <span class="text-xs text-muted" id="drawer-incident-time">Reported: Today at 14:31 UTC • Ward 14 New Delhi</span>
+          </div>
+          <button class="btn-icon" onclick="MunicipalPortal.closeDrawer()">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+
+        <div class="drawer-body-grid">
+          <!-- Left: Visual Evidence & AI Bounding Boxes -->
+          <div class="drawer-visual-col">
+            <div class="visual-card card">
+              <div class="visual-header">
+                <h5><i data-lucide="eye"></i> AI Computer Vision Inspection</h5>
+                <span class="badge badge-success" id="drawer-cv-confidence">91% Confidence</span>
+              </div>
+              <div class="canvas-inspector-wrapper">
+                <img id="drawer-incident-img" src="" alt="Incident Photo">
+                <canvas id="drawer-cv-canvas" class="cv-scan-canvas"></canvas>
+              </div>
+              <div class="cv-detected-tags" id="drawer-cv-tags">
+                <!-- Tags like Plastic bags, Food waste, Drain Blockage -->
+              </div>
+            </div>
+
+            <!-- 4-Signal Clustering Evidence -->
+            <div class="cluster-card card mt-3">
+              <div class="cluster-head">
+                <h5><i data-lucide="git-merge"></i> 4-Signal Duplicate Clustering Breakdown</h5>
+                <span class="badge badge-primary" id="drawer-cluster-count">4 Citizen Reports Merged</span>
+              </div>
+              <div class="cluster-signals-table">
+                <div class="sig-row">
+                  <span>GPS Proximity (≤ 100m)</span>
+                  <span class="text-emerald">✓ 15m apart (+25 pts)</span>
+                </div>
+                <div class="sig-row">
+                  <span>Time Window (≤ 4h)</span>
+                  <span class="text-emerald">✓ 15 mins apart (+25 pts)</span>
+                </div>
+                <div class="sig-row">
+                  <span>Category Match</span>
+                  <span class="text-emerald">✓ Organic ≈ Mixed (+25 pts)</span>
+                </div>
+                <div class="sig-row">
+                  <span>Image Perceptual Hash</span>
+                  <span class="text-emerald">✓ Score 0.82 ≥ 0.75 (+25 pts)</span>
+                </div>
+                <div class="sig-total">
+                  <strong>Total Cluster Match:</strong>
+                  <strong class="text-emerald">100 / 100 (Merged into SW-0847)</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Explainable Priority Math & Resource Dispatch -->
+          <div class="drawer-dispatch-col">
+            <!-- Priority Math Breakdown Card -->
+            <div class="math-breakdown-card card">
+              <div class="math-header">
+                <div>
+                  <span class="text-xs text-muted">AI Explainable Priority Score</span>
+                  <h4 class="text-danger" id="drawer-priority-score">58/100 → HIGH Priority</h4>
+                </div>
+                <span class="badge badge-critical" id="drawer-escalation-tag">Drain Escalation Applied</span>
+              </div>
+
+              <div class="formula-box">
+                <code>Priority = (w1×Hazard) + (w2×Vol) + (w3×Geo) + (w4×Age) + (w5×Freq)</code>
+                <div class="formula-steps" id="drawer-formula-steps">
+                  <!-- Injected step calculations -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Smart Resource Recommendation Card -->
+            <div class="smart-rec-card card mt-3">
+              <div class="rec-header">
+                <h5><i data-lucide="sparkles"></i> SwachhLens Smart Action Recommendation</h5>
+                <span class="badge badge-neutral">Rule Engine Evaluated</span>
+              </div>
+
+              <div class="rec-details-grid">
+                <div class="rec-item">
+                  <span class="lbl"><i data-lucide="users"></i> Recommended Crew</span>
+                  <strong id="drawer-rec-team">3 Manual Workers + 1 Supervisor</strong>
+                </div>
+                <div class="rec-item">
+                  <span class="lbl"><i data-lucide="truck"></i> Recommended Fleet</span>
+                  <strong id="drawer-rec-vehicle">1 Mini Truck + 1 Drainage Jetting Unit</strong>
+                </div>
+                <div class="rec-item">
+                  <span class="lbl"><i data-lucide="shield-alert"></i> Special Coordination</span>
+                  <strong id="drawer-rec-coord">Coordinate with School; Avoid 15:30 peak dismissal</strong>
+                </div>
+                <div class="rec-item">
+                  <span class="lbl"><i data-lucide="timer"></i> Estimated Duration</span>
+                  <strong id="drawer-rec-eta">90 minutes (ETA: 15 min)</strong>
+                </div>
+              </div>
+
+              <!-- Dispatch Crew Form -->
+              <div class="dispatch-form-group mt-3">
+                <label class="text-xs font-semibold">Assign Municipal Field Team:</label>
+                <select id="drawer-assign-team-select" class="form-select">
+                  <option value="Team-Sector5-A">Team-Sector5-A (Available • 4 Members • Jetting & Tipper)</option>
+                  <option value="Team-Sector5-B">Team-Sector5-B (Available • 2 Members • Mini Tipper)</option>
+                  <option value="Specialized-Drainage">Specialized Drainage Emergency Unit</option>
+                  <option value="GreenRecycle-Partner">GreenRecycle NGO Partner (Dry Waste)</option>
+                </select>
+              </div>
+
+              <div class="form-group mt-2">
+                <label class="text-xs font-semibold">Officer Special Instruction / Note:</label>
+                <input type="text" id="drawer-officer-note" class="form-input text-sm" value="School nearby - coordinate timing with school gates">
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="drawer-action-btns mt-3">
+                <button class="btn btn-primary flex-1" id="btn-drawer-assign" onclick="MunicipalPortal.assignIncidentFromDrawer()">
+                  <i data-lucide="send"></i> Accept & Dispatch Crew (1-Click)
+                </button>
+                <button class="btn btn-outline" onclick="MunicipalPortal.reassignIncident()">
+                  <i data-lucide="edit-3"></i> Modify Rules
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- AUTHENTICATION & LOGIN MODAL                                              -->
+    <!-- ========================================================================= -->
+    <div id="login-modal-backdrop" class="modal-backdrop hidden">
+      <div class="login-modal card" onclick="event.stopPropagation()">
+        <div class="login-modal-header">
+          <div class="login-brand">
+            <div class="brand-logo-icon"><i data-lucide="scan-line"></i></div>
+            <div>
+              <h3>SwachhLens</h3>
+              <span class="text-xs text-muted">Role-Based Access Control Portal</span>
+            </div>
+          </div>
+          <button class="btn-icon" onclick="Auth.closeLoginModal()"><i data-lucide="x"></i></button>
+        </div>
+
+        <div class="login-role-tabs">
+          <button class="login-role-tab active" data-login-role="officer" onclick="Auth.setLoginRole('officer')">
+            <i data-lucide="shield-check"></i>
+            <span>Municipal Officer</span>
+          </button>
+          <button class="login-role-tab" data-login-role="citizen" onclick="Auth.setLoginRole('citizen')">
+            <i data-lucide="user"></i>
+            <span>Citizen</span>
+          </button>
+          <button class="login-role-tab" data-login-role="crew" onclick="Auth.setLoginRole('crew')">
+            <i data-lucide="hard-hat"></i>
+            <span>Field Crew</span>
+          </button>
+        </div>
+
+        <div class="login-form-body">
+          <div class="form-group">
+            <label class="text-xs font-semibold" id="login-id-label">Officer ID / Email</label>
+            <input type="text" id="login-input-id" class="form-input" value="AUT-2341 (Priya Sharma)">
+          </div>
+          <div class="form-group">
+            <label class="text-xs font-semibold">Security Credential / OTP</label>
+            <input type="password" id="login-input-pass" class="form-input" value="••••••••">
+          </div>
+          <div class="rbac-notice-card">
+            <i data-lucide="lock" class="text-emerald"></i>
+            <span class="text-xs" id="login-rbac-text">Role: Municipal Officer • Access: Full GIS Command Center, Queue Triage, Dispatch Override & Audit Trail</span>
+          </div>
+
+          <button class="btn btn-primary btn-block mt-3" onclick="Auth.handleLoginSubmit()">
+            <i data-lucide="log-in"></i> Sign In to SwachhLens
+          </button>
+
+          <div class="quick-demo-accounts mt-3">
+            <span class="text-xs text-muted font-semibold">Quick 1-Click Demo Login:</span>
+            <div class="demo-acc-btns">
+              <button class="btn btn-outline btn-xs" onclick="Auth.quickLogin('officer')">Officer Priya Sharma</button>
+              <button class="btn btn-outline btn-xs" onclick="Auth.quickLogin('citizen')">Citizen Rajesh Kumar</button>
+              <button class="btn btn-outline btn-xs" onclick="Auth.quickLogin('crew')">Crew Lead Ramesh</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 10-STEP INTERACTIVE WALKTHROUGH MODAL                                     -->
+    <!-- ========================================================================= -->
+    <div id="walkthrough-modal-backdrop" class="modal-backdrop hidden">
+      <div class="walkthrough-modal card">
+        <div class="wt-header">
+          <div class="wt-title-group">
+            <span class="badge badge-emerald">End-to-End Walkthrough Demonstration</span>
+            <h3 id="wt-step-title">Stage 1: Citizen Photo Capture</h3>
+          </div>
+          <div class="wt-progress-bar-wrap">
+            <div class="wt-progress-fill" id="wt-progress-fill" style="width: 10%;"></div>
+          </div>
+          <button class="btn-icon" onclick="Walkthrough.stop()"><i data-lucide="x"></i></button>
+        </div>
+
+        <div class="wt-body">
+          <div class="wt-stage-badge" id="wt-stage-num">STEP 1 OF 10</div>
+          <div class="wt-narrative-card">
+            <p id="wt-step-description">Citizen Rajesh (CIT-4521) encounters an overflowing waste pile blocking a storm drain near Ram Nagar Municipal School and opens SwachhLens.</p>
+          </div>
+
+          <div class="wt-data-preview" id="wt-data-preview">
+            <!-- Dynamic data card for the stage -->
+          </div>
+        </div>
+
+        <div class="wt-footer">
+          <button class="btn btn-outline" id="wt-btn-prev" onclick="Walkthrough.prevStep()">
+            <i data-lucide="arrow-left"></i> Previous Stage
+          </button>
+          <div class="wt-step-indicators" id="wt-step-dots">
+            <!-- 10 dots -->
+          </div>
+          <button class="btn btn-primary" id="wt-btn-next" onclick="Walkthrough.nextStep()">
+            <span>Next Stage</span> <i data-lucide="arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- CIVIC RESOLUTION REPORT & CERTIFICATE MODAL (SECTION 20 STAGE 10)         -->
+    <!-- ========================================================================= -->
+    <div id="civic-report-modal-backdrop" class="modal-backdrop hidden" onclick="CitizenApp.closeCivicReportModal(event)">
+      <div class="civic-report-modal card" onclick="event.stopPropagation()">
+        <div class="civic-report-header">
+          <div class="report-brand">
+            <div class="brand-logo-icon"><i data-lucide="award"></i></div>
+            <div>
+              <h3>Municipal Civic Resolution Certificate</h3>
+              <span class="text-xs text-muted">Swachh Bharat Municipal Decision Support System</span>
+            </div>
+          </div>
+          <button class="btn-icon" onclick="CitizenApp.closeCivicReportModal()"><i data-lucide="x"></i></button>
+        </div>
+
+        <div class="civic-report-body" id="civic-report-body-content">
+          <div class="report-meta-banner">
+            <div class="meta-item">
+              <span class="lbl">INCIDENT ID</span>
+              <strong id="rep-incident-id">INCIDENT-2024-08-16-0847 (SW-0847)</strong>
+            </div>
+            <div class="meta-item">
+              <span class="lbl">WARD & ZONE</span>
+              <strong>Ward 14 • Ram Nagar, New Delhi</strong>
+            </div>
+            <div class="meta-item">
+              <span class="lbl">STATUS</span>
+              <span class="badge badge-success">VERIFIED RESOLVED & CLOSED</span>
+            </div>
+          </div>
+
+          <div class="report-evidence-comparison mt-3">
+            <div class="ev-card">
+              <span class="text-xs font-semibold text-danger">Original Citizen Evidence (14:30 UTC):</span>
+              <img id="rep-before-img" src="" alt="Before" class="report-thumb">
+              <span class="text-xs text-muted block mt-1">Classified: Organic + Drain Blockage</span>
+            </div>
+            <div class="ev-card">
+              <span class="text-xs font-semibold text-emerald">Verified Post-Cleanup Proof (15:30 UTC):</span>
+              <img id="rep-after-img" src="" alt="After" class="report-thumb">
+              <span class="text-xs text-emerald font-semibold block mt-1">AI Verified: 96% Waste Cleared</span>
+            </div>
+          </div>
+
+          <div class="report-timeline-grid mt-3">
+            <div class="tl-box">
+              <span class="lbl">Reporter Citizen</span>
+              <strong>Rajesh Kumar (CIT-4521)</strong>
+            </div>
+            <div class="tl-box">
+              <span class="lbl">Duplicate Consolidation</span>
+              <strong>4 Reports Clustered into 1 Dispatch</strong>
+            </div>
+            <div class="tl-box">
+              <span class="lbl">Authorizing Officer</span>
+              <strong>Priya Sharma (AUT-2341)</strong>
+            </div>
+            <div class="tl-box">
+              <span class="lbl">Assigned Response Crew</span>
+              <strong>Team-Sector5-A (Jetting & Tipper)</strong>
+            </div>
+            <div class="tl-box">
+              <span class="lbl">Total Resolution Time</span>
+              <strong class="text-emerald">62 Minutes (Saved 23 hours)</strong>
+            </div>
+            <div class="tl-box">
+              <span class="lbl">Citizen Experience Rating</span>
+              <span class="badge badge-success" id="rep-citizen-rating">⭐⭐⭐⭐⭐ Satisfied</span>
+            </div>
+          </div>
+
+          <div class="report-footer-seal mt-3">
+            <div class="seal-icon"><i data-lucide="shield-check"></i></div>
+            <div class="seal-text">
+              <span class="text-xs font-semibold">Digitally Signed by SwachhLens AI Decision Engine</span>
+              <span class="text-xs text-muted block">Cryptographic PostGIS Hash: <code>0x8f2a9...d47b</code> • Section 17/18 Compliant</span>
+            </div>
+            <button class="btn btn-outline btn-xs" onclick="window.print()">
+              <i data-lucide="printer"></i> Print / Save PDF
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- "ASK SWACHHLENS" AI MUNICIPAL ASSISTANT CHAT DRAWER                       -->
+    <!-- ========================================================================= -->
+    <div id="ai-chat-drawer" class="ai-chat-drawer card hidden">
+      <div class="ai-chat-header">
+        <div class="ai-chat-title">
+          <div class="ai-bot-avatar"><i data-lucide="bot"></i></div>
+          <div>
+            <h4>SwachhLens Assistant</h4>
+            <span class="text-xs text-muted">Natural Language Decision Intelligence</span>
+          </div>
+        </div>
+        <button class="btn-icon-sm" onclick="AIAssistant.toggle()"><i data-lucide="x"></i></button>
+      </div>
+
+      <div class="ai-chat-messages" id="ai-chat-messages">
+        <div class="chat-bubble bot-bubble">
+          <strong>Hello Officer Priya!</strong> I am your SwachhLens Decision Intelligence Assistant. You can ask me questions like:
+          <div class="chat-prompt-chips mt-2">
+            <button class="prompt-chip" onclick="AIAssistant.sendPrompt('What are today\'s highest priority waste incidents?')">What are today's highest priority waste incidents?</button>
+            <button class="prompt-chip" onclick="AIAssistant.sendPrompt('Show drain blockage risks near schools')">Show drain blockage risks near schools</button>
+            <button class="prompt-chip" onclick="AIAssistant.sendPrompt('What is our duplicate clustering efficiency today?')">What is our duplicate clustering efficiency today?</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="ai-chat-input-bar">
+        <input type="text" id="ai-chat-input" placeholder="Ask about incidents, priority, or crews..." onkeydown="if(event.key==='Enter') AIAssistant.handleInput()">
+        <button class="btn btn-primary btn-sm" onclick="AIAssistant.handleInput()"><i data-lucide="send"></i></button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Core Application Scripts -->
+  <script src="js/data-store.js"></script>
+  <script src="js/ai-pipeline.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/citizen-app.js"></script>
+  <script src="js/city-3d-map.js"></script>
+  <script src="js/municipal-portal.js"></script>
+  <script src="js/field-crew-app.js"></script>
+  <script src="js/walkthrough.js"></script>
+  <script src="js/ai-assistant.js"></script>
+  <script src="js/intro-3d.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
+
