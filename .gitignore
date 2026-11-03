@@ -1,0 +1,15 @@
+# Python / PyCharm
+__pycache__/
+*.pyc
+.idea/
+venv/
+.venv/
+
+# Secrets - never commit these
+.env
+*.key
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+.vscode/
